@@ -101,3 +101,6 @@ tmpKeys/
 # Saved user projects
 user-projects/projects.json
 myProjects/
+
+#package-lock
+package-lock.json
