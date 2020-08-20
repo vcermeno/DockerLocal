@@ -1,15 +1,22 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 export {};
-import { Request, Response, NextFunction, ErrorRequestHandler } from "express";
-const express = require("express");
-const path = require("path");
-const passportSetup = require("../../src/server/config/passport-setup");
-const passport = require("passport");
+import express, { Request, Response, NextFunction, ErrorRequestHandler } from "express";
+import path = require("path");
+// const passportSetup = require("../../src/server/config/passport-setup");
+// import passport = require("passport");
 require("dotenv/config");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-app.use(cors());
+// disables 'powered by express' header
+app.disable('x-powered-by')
+
+// only allow CORS from react front end
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+const reactOrigin = MAIN_WINDOW_WEBPACK_ENTRY.substring(0, MAIN_WINDOW_WEBPACK_ENTRY.lastIndexOf("/"))
+const corsOptions = { origin: reactOrigin}
+app.use(cors(corsOptions));
 
 // Bring in routes
 const authRoute = require('../../src/server/routes/auth-route');
@@ -20,15 +27,13 @@ const configRoute = require("../../src/server/routes/config-route");
 // Body Parsing Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(passport.initialize());
+// app.use(passport.initialize());
 app.use(cookieParser());
 
 // Use routes
 app.use('/auth', authRoute);
 app.use('/api', apiRoute);
 app.use('/docker', dockerRoute);
-app.use("/auth", authRoute);
-app.use("/api", apiRoute);
 app.use("/config", configRoute);
 
 // Serve static files
@@ -60,13 +65,14 @@ app.use(
       log: "Error caught in global error handler",
       status: 500,
       msg: {
-        err: err,
+        err,
       },
     };
 
     // Update default error message with provided error if there is one
     const output = Object.assign(defaultError, err);
-    res.send(output);
+    console.log(output.log);
+    res.send(output.msg);
   }
 );
 
