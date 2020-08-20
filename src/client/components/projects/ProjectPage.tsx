@@ -1,25 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
-import AddRepos from "../addRepos/AddRepos";
-import { Project, User, ProjectPageProps, Repo } from "../../../types/types";
-import ProjectRepoListItem from "./ProjectRepoListItem";
-import ComposeFileModal from "./ComposeFileModal";
-import CloningReposModal from "./CloningReposModal";
-import { findActiveProject } from "../../helpers/projectHelper";
-import { getUsernameAndToken } from "../../helpers/cookieClientHelper";
+import AddRepos from '../addRepos/AddRepos';
+import {
+  Project,
+  ProjectPageProps,
+  ComposeFile,
+  ComposeFileModalProps,
+} from '../../../types/types';
+import ProjectRepoListItem from './ProjectRepoListItem';
+import ComposeFileModal from './ComposeFileModal';
+import CloningReposModal from './CloningReposModal';
+import { findActiveProject } from '../../helpers/projectHelper';
+import { getUsernameAndToken } from '../../helpers/cookieClientHelper';
+import { EXPRESS_URL } from '../../helpers/constants';
 
 const ProjectPage: React.FC<ProjectPageProps> = ({
   activeProject,
   userInfo,
   projectList,
-  setProjectList,
+  dispatch,
 }) => {
   const [showAddRepos, setShowAddRepos] = useState(false);
   const [projectRepoListItems, setprojectRepoListItems] = useState([]);
 
   const [showCloningReposModal, setShowCloningReposModal] = useState(false);
   const [showComposeModal, setShowComposeModal] = useState(false);
-  const [composeFileData, setComposeFileData] = useState({});
+  const [composeFileData, setComposeFileData] = useState<null | ComposeFile>(
+    null
+  );
 
   // populate repo list items when active project changes and when request from home.tsx comes back to update project list
   useEffect(() => {
@@ -33,7 +41,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
         return (
           <ProjectRepoListItem
             key={`ProjectRepoListItem ${repo.repoId}`}
-            {...{ repo, activeProject, projectList, setProjectList }}
+            {...{ repo, activeProject, projectList, dispatch }}
           />
         );
       });
@@ -43,14 +51,11 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
 
   /**
    * @function onClick button Compose File button
-   * @description send 'POST' request 
+   * @description send 'POST' request
    * send: projectName
    * receive: yml file and pathfile
    */
-  const composeFile = () => {
-
-    const Url = "http://localhost:3001/docker/";
-
+  const composeFile = (): void => {
     const currentProject: Project = findActiveProject(
       projectList,
       activeProject
@@ -62,33 +67,31 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
 
     const body = {
       projectName: currentProject.projectName,
-      repos: reposToClone
+      repos: reposToClone,
     };
 
-    //optional parameters
-    const otheParam = {
+    fetch(`${EXPRESS_URL}/docker`, {
       headers: {
-        "content-type": "application/json; charset=UTF-8",
+        'content-type': 'application/json; charset=UTF-8',
       },
       body: JSON.stringify(body),
-      method: "POST",
-    };
-    fetch(Url, otheParam)
+      method: 'POST',
+    })
       .then((data) => {
         return data.json();
       })
       .then((res) => {
-        const newYmlData = {}
-        newYmlData.text = res.file;
-        newYmlData.path = res.path;
+        const newYmlData: ComposeFile = {
+          text: res.file,
+          path: res.path,
+        };
         setComposeFileData(newYmlData);
         setShowComposeModal(true);
       })
       .catch((error) => console.log(error));
   };
 
-
-  const cloneRepos = async () => {
+  const cloneRepos = async (): Promise<void> => {
     setShowCloningReposModal(true);
 
     const currentProject: Project = findActiveProject(
@@ -105,50 +108,49 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
     const { username, accessToken } = await getUsernameAndToken();
 
     const body = JSON.stringify({
-      username: username,
-      accessToken: accessToken,
+      username,
+      accessToken,
       repos: reposToClone,
       projectName: currentProject.projectName,
     });
 
-    console.log(username, " decrypte", accessToken);
-    fetch("http://localhost:3001/api/clonerepos", {
-      method: "POST",
-      body: body,
+    fetch(`${EXPRESS_URL}/api/clonerepos`, {
+      method: 'POST',
+      body,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     })
       .then((res) => {
         setShowCloningReposModal(false);
         return res.json();
       })
-      .then((res) => console.log("success", res))
-      .catch((err) => console.log("fail", err));
+      .then((res) => console.log('success', res))
+      .catch((err) => console.log('fail', err));
   };
 
   return (
     <div>
       <div>Select your repositories: </div>
       <button
-        className="button is-primary"
+        className='button is-primary'
         onClick={(): void => setShowAddRepos(true)}
-        style={{ margin: "10px" }}
+        style={{ margin: '10px' }}
       >
         Add Repositories
       </button>
       <button
-        className="button is-primary"
+        className='button is-primary'
         onClick={(): Promise<void> => cloneRepos()}
-        style={{ margin: "10px" }}
+        style={{ margin: '10px' }}
       >
         Clone Repos
       </button>
 
       <button
-        className="button is-primary"
+        className='button is-primary'
         onClick={(): void => composeFile()}
-        style={{ margin: "10px" }}
+        style={{ margin: '10px' }}
       >
         Compose File
       </button>
@@ -163,7 +165,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
             setShowAddRepos,
             activeProject,
             projectList,
-            setProjectList,
+            dispatch,
           }}
         />
       )}
@@ -180,7 +182,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
             setShowComposeModal,
             activeProject,
             projectList,
-            composeFileData
+            composeFileData,
           }}
         />
       )}
