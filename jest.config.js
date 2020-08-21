@@ -7,7 +7,7 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest'
   },
-  // Matches patrent folder `__test__` and file name shold contain `test`
+  // Matches patrent folder `__test__` and file name should contain `test`
   testRegex: '/__tests__/.*\\.test.(ts|tsx)$',
   // Module file extension for importing
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],

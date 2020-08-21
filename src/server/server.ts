@@ -8,6 +8,7 @@ require("dotenv/config");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const PORT = 3001;
 
 // disables 'powered by express' header
 app.disable('x-powered-by')
@@ -76,6 +77,6 @@ app.use(
   }
 );
 
-const PORT = 3001;
-
+module.exports = app;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
